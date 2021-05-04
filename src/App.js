@@ -1,6 +1,9 @@
 import './App.css';
 import {Container, Navbar} from "react-bootstrap";
+import {Route, Redirect, Switch, BrowserRouter} from 'react-router-dom';
+
 import CameraListView from "./view/CameraListView";
+import CameraCreateView from "./view/CameraCreateView";
 
 const App = () => {
     return (
@@ -12,7 +15,14 @@ const App = () => {
             </Navbar>
 
             <Container>
-                <CameraListView/>
+                <BrowserRouter>
+                    <Switch>
+                        <Route exact path="/" render={() => <Redirect to="/camera/list"/>}/>
+
+                        <Route       path="/camera/list" component={CameraListView} />
+                        <Route       path="/camera/new"  component={CameraCreateView} />
+                    </Switch>
+                </BrowserRouter>
             </Container>
         </div>
     )

@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import {Button, Col, Row, Spinner, Table} from "react-bootstrap";
+import {Link} from "react-router-dom";
 
 const CameraListView = () => {
 
@@ -25,6 +26,7 @@ const CameraListView = () => {
         setIsLoading(true);
 
         fetch(`/camera`, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
@@ -45,9 +47,11 @@ const CameraListView = () => {
      */
     if (isLoading) {
         return (
-            <Spinner animation="border" role="status">
-                <span className="sr-only">Laden... als dit lang duurt dan doet je setup het waarschijnlijk niet.... check browser console voor errors enzo</span>
-            </Spinner>
+            <div>
+                <Spinner animation="border" role="status">
+                    <span className="sr-only">Laden... als dit lang duurt dan doet je setup het waarschijnlijk niet.... check browser console voor errors enzo</span>
+                </Spinner>
+            </div>
         )
     } else {
         return (
@@ -95,11 +99,14 @@ const RefreshButton = ({refreshFunction}) => {
     )
 }
 
-const CameraAddButton = () => { // TODO!! backend functionaliteit hiervoor is ook nog niet gemaakt
+const CameraAddButton = () => {
+
     return (
-        <Button variant="primary" className="w-100" onClick={() => alert("TODO!! backend functionaliteit hiervoor is ook nog niet gemaakt")}>
-            Voeg toe...
-        </Button>
+        <Link to="/camera/new">
+            <Button variant="primary" className="w-100">
+                Voeg toe...
+            </Button>
+        </Link>
     )
 }
 
