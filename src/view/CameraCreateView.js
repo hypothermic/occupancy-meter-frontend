@@ -13,7 +13,15 @@ const CameraCreateView = () => {
      * Boolean of de pagina aan het laden is of niet
      */
     const [isSending, setIsSending] = useState(false)
+
+    /*
+     * Boolean of het toevoegen van de camera is voltooid
+     */
     const [isDone,    setIsDone]    = useState(false)
+
+    /*
+     * null of String die aangeeft of er een error is opgetreden
+     */
     const [error,     setError]     = useState(null)
 
     /*
@@ -39,11 +47,17 @@ const CameraCreateView = () => {
             setIsSending(false);
 
             switch (response.status) {
+                // Aanmaken successvol
                 case 201:
                     setIsDone(true);
                     break;
+                // Camera bestaat al
                 case 409:
-                    setError("Camera met deze naam bestaat al");
+                    setError("Er bestaat al een camera met de naam" + name);
+                    break;
+                default:
+                    setError("Server error, kijk in de debugging tab van je browser welke error het is");
+                    break;
             }
         })
     }
