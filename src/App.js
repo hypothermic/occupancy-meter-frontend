@@ -4,6 +4,7 @@ import {Route, Redirect, Switch, BrowserRouter} from 'react-router-dom';
 
 import CameraListView from "./view/CameraListView";
 import CameraCreateView from "./view/CameraCreateView";
+import CameraHistoryView from "./view/CameraHistoryView";
 
 const App = () => {
     return (
@@ -21,6 +22,7 @@ const App = () => {
 
                         <Route       path="/camera/list" component={CameraListView} />
                         <Route       path="/camera/new"  component={CameraCreateView} />
+                        <Route       path="/history/:id" component={CameraHistoryView} />
                     </Switch>
                 </BrowserRouter>
             </Container>

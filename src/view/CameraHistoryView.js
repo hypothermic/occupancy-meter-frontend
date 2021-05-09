@@ -1,13 +1,13 @@
 import React, {useState, useEffect} from 'react'
 import {Button, Col, Row, Spinner, Table} from "react-bootstrap";
-import {Link, useHistory} from "react-router-dom";
+import {useHistory} from 'react-router-dom';
 
-const CameraListView = () => {
+const CameraHistoryView = ({match}) => {
 
     /*
      * Array met alle cameras
      */
-    const [cameras, setCameras] = useState([])
+    const [points, setPoints] = useState([])
 
     /*
      * Boolean of de pagina aan het laden is of niet
@@ -27,7 +27,7 @@ const CameraListView = () => {
     const load = () => {
         setIsLoading(true);
 
-        fetch(`/camera`, {
+        fetch(`/history/` + match.params.id, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -35,8 +35,8 @@ const CameraListView = () => {
             }
         })
         .then(response => response.json())
-        .then(cameras => {
-            setCameras(cameras)
+        .then(points => {
+            setPoints(points)
             setIsLoading(false)
         })
         .catch(error => {
@@ -66,26 +66,19 @@ const CameraListView = () => {
                         <RefreshButton refreshFunction={load} />
                     </Col>
                     <Col xs={{span: 2}}>
-                        <CameraAddButton/>
+                        <BackButton backFunction={() => history.push("/camera/list")} />
                     </Col>
                 </Row>
 
                 <Table striped bordered hover className="my-3">
                     <thead>
                         <tr>
-                            <th>Naam</th>
-                            <th>Camera IP</th>
-                            <th>VPS IP</th>
+                            <th>Tijdstip</th>
+                            <th>Aantal personen</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {cameras.map(camera =>
-                            <tr onClick={() => history.push("/history/" + camera.name)}>
-                                <td>{camera.name}</td>
-                                <td>{camera.cam_ip}</td>
-                                <td>{camera.vps_ip}</td>
-                            </tr>
-                        )}
+                        <HistoryTable points={points}/>
                     </tbody>
                 </Table>
             </div>
@@ -101,15 +94,44 @@ const RefreshButton = ({refreshFunction}) => {
     )
 }
 
-const CameraAddButton = () => {
-
+const BackButton = ({backFunction}) => {
     return (
-        <Link to="/camera/new">
-            <Button variant="primary" className="w-100">
-                Voeg toe...
-            </Button>
-        </Link>
+        <Button variant="primary" className="w-100" onClick={backFunction}>
+            Terug
+        </Button>
     )
 }
 
-export default CameraListView
+const HistoryTable = ({points}) => {
+
+    const timeFormat = (time) => {
+        // geadapteerd van https://stackoverflow.com/a/35890537 ... datum toegevoegd en locale naar NL
+        const dtFormat = new Intl.DateTimeFormat('nl-NL', {
+            dateStyle: 'full',
+            timeStyle: 'medium',
+            timeZone: 'UTC'
+        });
+
+        return dtFormat.format(new Date(time / 1e6)); // 1e6 voor omzetten van nanoseconden naar milliseconden
+    }
+
+    if (points.length <= 0) {
+        return(
+            <tr>
+                <td>Geen data</td>
+                <td>Geen data</td>
+            </tr>
+        )
+    } else {
+        return (
+            points.map(camera =>
+                <tr>
+                    <td>{timeFormat(camera.time)}</td>
+                    <td>{camera.amount}</td>
+                </tr>
+            )
+        )
+    }
+}
+
+export default CameraHistoryView
