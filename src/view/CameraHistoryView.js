@@ -124,7 +124,7 @@ const HistoryTable = ({points}) => {
         )
     } else {
         return (
-            points.map(camera =>
+            points.sort((a, b) => b.time - a.time).map(camera =>
                 <tr>
                     <td>{timeFormat(camera.time)}</td>
                     <td>{camera.amount}</td>

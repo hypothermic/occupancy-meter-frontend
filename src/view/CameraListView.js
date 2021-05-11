@@ -79,13 +79,7 @@ const CameraListView = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {cameras.map(camera =>
-                            <tr onClick={() => history.push("/history/" + camera.name)}>
-                                <td>{camera.name}</td>
-                                <td>{camera.cam_ip}</td>
-                                <td>{camera.vps_ip}</td>
-                            </tr>
-                        )}
+                        <CameraTable cameras={cameras} history={history}/>
                     </tbody>
                 </Table>
             </div>
@@ -102,7 +96,6 @@ const RefreshButton = ({refreshFunction}) => {
 }
 
 const CameraAddButton = () => {
-
     return (
         <Link to="/camera/new">
             <Button variant="primary" className="w-100">
@@ -110,6 +103,28 @@ const CameraAddButton = () => {
             </Button>
         </Link>
     )
+}
+
+const CameraTable = ({cameras, history}) => {
+    if (cameras.length <= 0) {
+        return(
+            <tr>
+                <td>Geen data</td>
+                <td>Geen data</td>
+                <td>Geen data</td>
+            </tr>
+        )
+    } else {
+        return (
+            cameras.map(camera =>
+                <tr onClick={() => history.push("/history/" + camera.name)}>
+                    <td>{camera.name}</td>
+                    <td>{camera.cam_ip}</td>
+                    <td>{camera.vps_ip}</td>
+                </tr>
+            )
+        )
+    }
 }
 
 export default CameraListView
