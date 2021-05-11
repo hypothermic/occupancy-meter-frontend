@@ -60,7 +60,7 @@ const CameraHistoryView = ({match}) => {
             <div>
                 <Row>
                     <Col xs={{span: 8}}>
-                        <h2>Lijst met camera's</h2>
+                        <h2>History van camera "{match.params.id}"</h2>
                     </Col>
                     <Col xs={{span: 2}}>
                         <RefreshButton refreshFunction={load} />
