@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react'
-import {Button, Col, Row, Spinner, Table} from "react-bootstrap";
+import {Badge, Button, Col, Row, Spinner, Table} from "react-bootstrap";
 import {Link, useHistory} from "react-router-dom";
+import {Wifi, WifiOff} from "react-bootstrap-icons";
 
 const CameraListView = () => {
 
@@ -71,11 +72,18 @@ const CameraListView = () => {
                 </Row>
 
                 <Table striped bordered hover className="my-3">
+                    <colgroup>
+                        <col className={"w-25"}/>
+                        <col className={"w-25"}/>
+                        <col className={"w-25"}/>
+                        <col className={"w-25"}/>
+                    </colgroup>
                     <thead>
                         <tr>
                             <th>Naam</th>
                             <th>Camera IP</th>
                             <th>VPS IP</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -112,6 +120,7 @@ const CameraTable = ({cameras, history}) => {
                 <td>Geen data</td>
                 <td>Geen data</td>
                 <td>Geen data</td>
+                <td>Geen data</td>
             </tr>
         )
     } else {
@@ -121,9 +130,33 @@ const CameraTable = ({cameras, history}) => {
                     <td>{camera.name}</td>
                     <td>{camera.cam_ip}</td>
                     <td>{camera.vps_ip}</td>
+                    <td>
+                        <CameraStateBadge camera={camera}/>
+                    </td>
                 </tr>
             )
         )
+    }
+}
+
+const CameraStateBadge = ({camera}) => {
+    switch (camera.is_online) {
+        case true:
+            return (
+                <Badge variant="success">
+                    <Wifi/>
+                    &nbsp;
+                    Verbonden
+                </Badge>
+            )
+        default:
+            return (
+                <Badge variant="danger">
+                    <WifiOff/>
+                    &nbsp;
+                    Offline
+                </Badge>
+            )
     }
 }
 

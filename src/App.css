@@ -1,1 +1,4 @@
-/* hier alle CSS */
+/* De normale font size van een badge is echt onleesbaar klein, dus maak het iets groter */
+.badge {
+    font-size: 90% !important;
+}
