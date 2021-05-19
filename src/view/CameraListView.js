@@ -18,12 +18,66 @@ const CameraListView = () => {
     const history = useHistory()
 
     /*
+     * Boolean of de pagina aan het laden is of niet
+     */
+    const [isSending, setIsSending] = useState(false)
+
+    /*
+     * Boolean of het toevoegen van de camera is voltooid
+     */
+    const [isDone,    setIsDone]    = useState(false)
+
+    /*
+     * null of String die aangeeft of er een error is opgetreden
+     */
+    const [error,     setError]     = useState(null)
+
+    /*
      * Functie die bij het laden van de pagina aangeroepen wordt.
      * Hij haalt de JSON data met de camera info array van de REST endpoint op.
      */
     useEffect(() => {
         load()
     }, [])
+
+
+    /*
+     * Functie die met een POST request de data in JSON-formaat naar de server stuurt
+     */
+
+    const send = () => {
+        setIsSending(true);
+
+        fetch(`/camera/delete`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(
+                {
+                    "name":   cameras[0].name
+                }
+            ),
+        }).then(response => {
+            setIsSending(false);
+            load();
+
+            switch (response.status) {
+                // Aanmaken successvol
+                case 201:
+                    setIsDone(true);
+                    break;
+                default:
+                    setError("Server error, kijk in de debugging tab van je browser welke error het is");
+                    break;
+            }
+        })
+    }
+
+    /*
+     * Functie die met een GET request de data in JSON-formaat van de server ontvangt. 
+     */
 
     const load = () => {
         setIsLoading(true);
@@ -77,6 +131,7 @@ const CameraListView = () => {
                         <col className={"w-25"}/>
                         <col className={"w-25"}/>
                         <col className={"w-25"}/>
+                        <col className={"w-25"}/>
                     </colgroup>
                     <thead>
                         <tr>
@@ -84,16 +139,21 @@ const CameraListView = () => {
                             <th>Camera IP</th>
                             <th>VPS IP</th>
                             <th>Status</th>
+                            <th>Verwijderen</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <CameraTable cameras={cameras} history={history}/>
+                        <CameraTable cameras={cameras} history={history} send={send}/>
                     </tbody>
                 </Table>
             </div>
         )
     }
 }
+
+/*
+ * Knop om de pagina te herladen.
+ */
 
 const RefreshButton = ({refreshFunction}) => {
     return (
@@ -102,6 +162,22 @@ const RefreshButton = ({refreshFunction}) => {
         </Button>
     )
 }
+
+/*
+ * Knop om de een camera uit de lijst te verwijderen.
+ */
+
+const DeleteButton = ({deleteButton}) => {
+    return (
+        <Button variant="primary" className="w-100" onClick={deleteButton}>
+            Verwijderen
+        </Button>
+    )
+}
+
+/*
+ * Knop welke redirect naar de "/camera/new" waarin een nieuwe camera toegevoegd kan worden.
+ */
 
 const CameraAddButton = () => {
     return (
@@ -113,10 +189,17 @@ const CameraAddButton = () => {
     )
 }
 
-const CameraTable = ({cameras, history}) => {
+/*
+ * Maakt de tabel aan waarin de naam, het IP van de camera, het IP van de vps, de status van de camera en de verwijderknop
+ * worden getoond.
+ */
+
+
+const CameraTable = ({cameras, history, send}) => {
     if (cameras.length <= 0) {
         return(
             <tr>
+                <td>Geen data</td>
                 <td>Geen data</td>
                 <td>Geen data</td>
                 <td>Geen data</td>
@@ -126,18 +209,23 @@ const CameraTable = ({cameras, history}) => {
     } else {
         return (
             cameras.map(camera =>
-                <tr onClick={() => history.push("/history/" + camera.name)}>
-                    <td>{camera.name}</td>
-                    <td>{camera.cam_ip}</td>
-                    <td>{camera.vps_ip}</td>
-                    <td>
+                <tr>
+                    <td onClick={() => history.push("/history/" + camera.name)}>{camera.name}</td>
+                    <td onClick={() => history.push("/history/" + camera.name)}>{camera.cam_ip}</td>
+                    <td onClick={() => history.push("/history/" + camera.name)}>{camera.vps_ip}</td>
+                    <td onClick={() => history.push("/history/" + camera.name)}>
                         <CameraStateBadge camera={camera}/>
                     </td>
+                    <td><DeleteButton deleteButton={send}></DeleteButton></td>
                 </tr>
             )
         )
     }
 }
+
+/*
+ * Live tonen van de status van de camera. Deze is "verbonden" of "offine".
+ */
 
 const CameraStateBadge = ({camera}) => {
     switch (camera.is_online) {
