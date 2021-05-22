@@ -63,6 +63,10 @@ const CameraHistoryView = ({match}) => {
         })
     }
 
+    const backFunction = () => {
+        history.push("/camera/list");
+    }
+
     /*
      * Als de REST call nog bezig is, laat een animatie zien
      */
@@ -78,7 +82,7 @@ const CameraHistoryView = ({match}) => {
         return (
             <div>
                 <Row>
-                    <Col xs={{span: 8}}>
+                    <Col xs={{span: 6}}>
                         <h2>History van camera "{match.params.id}"</h2>
                         &nbsp;
                         <CameraStateBadge status={status}/>
@@ -87,7 +91,10 @@ const CameraHistoryView = ({match}) => {
                         <RefreshButton refreshFunction={load} />
                     </Col>
                     <Col xs={{span: 2}}>
-                        <BackButton backFunction={() => history.push("/camera/list")} />
+                        <DeleteButton cameraName={match.params.id} onCompleted={backFunction}/>
+                    </Col>
+                    <Col xs={{span: 2}}>
+                        <BackButton backFunction={backFunction} />
                     </Col>
                 </Row>
 
@@ -141,6 +148,38 @@ const CameraHistoryView = ({match}) => {
     }
 }
 
+/*
+ * Knop om de een camera uit de lijst te verwijderen.
+ */
+const DeleteButton = ({cameraName, onCompleted}) => {
+
+    /*
+     * Functie die een DELETE request stuurt om de camera te verwijderen
+     */
+    const send = () => {
+        fetch(`/camera/` + cameraName, {
+            method: 'DELETE',
+        }).then(response => {
+            onCompleted();
+
+            switch (response.status) {
+                // Aanmaken successvol
+                case 201:
+                    break;
+                default:
+                    console.log("Delete POST error " + response.status)
+                    break;
+            }
+        })
+    }
+
+    return (
+        <Button variant="primary" className="w-100" onClick={send}>
+            Verwijderen
+        </Button>
+    )
+}
+
 const RefreshButton = ({refreshFunction}) => {
     return (
         <Button variant="primary" className="w-100" onClick={refreshFunction}>
@@ -172,8 +211,7 @@ const HistoryTable = ({points}) => {
     if (points.length <= 0) {
         return(
             <tr>
-                <td>Geen data</td>
-                <td>Geen data</td>
+                <td colSpan={2} className="text-center py-5">Geen historie</td>
             </tr>
         )
     } else {

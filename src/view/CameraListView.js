@@ -40,41 +40,6 @@ const CameraListView = () => {
         load()
     }, [])
 
-
-    /*
-     * Functie die met een POST request de data in JSON-formaat naar de server stuurt
-     */
-
-    const send = () => {
-        setIsSending(true);
-
-        fetch(`/camera/delete`, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(
-                {
-                    "name":   cameras[0].name
-                }
-            ),
-        }).then(response => {
-            setIsSending(false);
-            load();
-
-            switch (response.status) {
-                // Aanmaken successvol
-                case 201:
-                    setIsDone(true);
-                    break;
-                default:
-                    setError("Server error, kijk in de debugging tab van je browser welke error het is");
-                    break;
-            }
-        })
-    }
-
     /*
      * Functie die met een GET request de data in JSON-formaat van de server ontvangt. 
      */
@@ -143,7 +108,7 @@ const CameraListView = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        <CameraTable cameras={cameras} history={history} send={send}/>
+                        <CameraTable cameras={cameras} history={history} reloadFunction={load}/>
                     </tbody>
                 </Table>
             </div>
@@ -167,9 +132,30 @@ const RefreshButton = ({refreshFunction}) => {
  * Knop om de een camera uit de lijst te verwijderen.
  */
 
-const DeleteButton = ({deleteButton}) => {
+const DeleteButton = ({cameraName, onCompleted}) => {
+
+    /*
+     * Functie die met een POST request de data in JSON-formaat naar de server stuurt
+     */
+    const send = () => {
+        fetch(`/camera/` + cameraName, {
+            method: 'DELETE',
+        }).then(response => {
+            onCompleted();
+
+            switch (response.status) {
+                // Aanmaken successvol
+                case 201:
+                    break;
+                default:
+                    console.log("Delete POST error " + response.status)
+                    break;
+            }
+        })
+    }
+
     return (
-        <Button variant="primary" className="w-100" onClick={deleteButton}>
+        <Button variant="primary" className="w-100" size="sm" onClick={send}>
             Verwijderen
         </Button>
     )
@@ -195,15 +181,11 @@ const CameraAddButton = () => {
  */
 
 
-const CameraTable = ({cameras, history, send}) => {
+const CameraTable = ({cameras, history, reloadFunction}) => {
     if (cameras.length <= 0) {
         return(
             <tr>
-                <td>Geen data</td>
-                <td>Geen data</td>
-                <td>Geen data</td>
-                <td>Geen data</td>
-                <td>Geen data</td>
+                <td colSpan={5} className="text-center py-5">Geen data</td>
             </tr>
         )
     } else {
@@ -216,7 +198,9 @@ const CameraTable = ({cameras, history, send}) => {
                     <td onClick={() => history.push("/history/" + camera.name)}>
                         <CameraStateBadge camera={camera}/>
                     </td>
-                    <td><DeleteButton deleteButton={send}></DeleteButton></td>
+                    <td>
+                        <DeleteButton cameraName={camera.name} onCompleted={reloadFunction}/>
+                    </td>
                 </tr>
             )
         )
