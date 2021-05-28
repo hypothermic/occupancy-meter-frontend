@@ -85,7 +85,7 @@ const CameraHistoryView = ({match}) => {
                     <Col xs={{span: 6}}>
                         <h2>History van camera "{match.params.id}"</h2>
                         &nbsp;
-                        <CameraStateBadge status={status}/>
+                        <CameraStateBadge cameraName={match.params.id} status={status} onStatusChange={load}/>
                     </Col>
                     <Col xs={{span: 2}}>
                         <RefreshButton refreshFunction={load} />
@@ -259,24 +259,68 @@ const HistoryGraphTick = ({x, y, stroke, payload}) => {
     )
 }
 
-const CameraStateBadge = ({status}) => {
+const CameraStateBadge = ({cameraName, status, onStatusChange}) => {
+
+    const [isConnecting, setIsConnecting] = useState(false);
+
+    /*
+     * Functie die een DELETE request stuurt om de camera te verwijderen
+     */
+    const send = (action) => {
+        setIsConnecting(true);
+
+        fetch(`/camera/` + cameraName + `/status`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                    "action": action,
+                }
+            ),
+        }).then(response => {
+            setIsConnecting(false);
+
+            switch (response.status) {
+                // Aanmaken successvol
+                case 204:
+                    onStatusChange();
+                    break;
+                default:
+                    console.log("Delete POST error " + response.status)
+                    break;
+            }
+        })
+    }
+
     switch (status) {
         case true:
             return (
-                <Badge variant="success">
+                <Badge variant="success" onClick={() => send("disconnect")}>
                     <Wifi/>
                     &nbsp;
                     Verbonden
                 </Badge>
             )
         default:
-            return (
-                <Badge variant="danger">
-                    <WifiOff/>
-                    &nbsp;
-                    Offline
-                </Badge>
-            )
+            if (isConnecting) {
+                return (
+                    <Badge variant="warning">
+                        <WifiOff/>
+                        &nbsp;
+                        Verbinden...
+                    </Badge>
+                )
+            } else {
+                return (
+                    <Badge variant="danger" onClick={() => send("connect")}>
+                        <WifiOff/>
+                        &nbsp;
+                        Offline
+                    </Badge>
+                )
+            }
     }
 }
 
