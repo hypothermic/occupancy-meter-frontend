@@ -3,6 +3,9 @@ import {Badge, Button, Col, Row, Spinner, Table} from "react-bootstrap";
 import {Link, useHistory} from "react-router-dom";
 import {Wifi, WifiOff} from "react-bootstrap-icons";
 
+/*
+ * Component met een lijst van alle cameras
+ */
 const CameraListView = () => {
 
     /*
@@ -15,52 +18,43 @@ const CameraListView = () => {
      */
     const [isLoading, setIsLoading] = useState(false)
 
+    /*
+     * react-router history object
+     */
     const history = useHistory()
-
-    /*
-     * Boolean of de pagina aan het laden is of niet
-     */
-    const [isSending, setIsSending] = useState(false)
-
-    /*
-     * Boolean of het toevoegen van de camera is voltooid
-     */
-    const [isDone,    setIsDone]    = useState(false)
-
-    /*
-     * null of String die aangeeft of er een error is opgetreden
-     */
-    const [error,     setError]     = useState(null)
 
     /*
      * Functie die bij het laden van de pagina aangeroepen wordt.
      * Hij haalt de JSON data met de camera info array van de REST endpoint op.
      */
-    useEffect(() => {
-        load()
-    }, [])
+    useEffect(() => load(), [])
 
     /*
      * Functie die met een GET request de data in JSON-formaat van de server ontvangt. 
      */
-
     const load = () => {
         setIsLoading(true);
 
+        // Stuur een HTTP GET request naar de /camera REST-endpoint
         fetch(`/camera`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
+                // Accepteer een antwoord in JSON formaat
                 'Accept': 'application/json',
+                'Content-Type': 'application/json',
             }
         })
+        // Wanneer er een antwoord binnen is:
+        // Unpack de JSON naar een Javascript object
         .then(response => response.json())
+        // Set de cameras array
         .then(cameras => {
             setCameras(cameras)
             setIsLoading(false)
         })
+        // Mocht er een fout zijn opgetreden:
         .catch(error => {
-            // TODO laat error message zien ofzo
+            console.log("Fout bij het ophalen van de data")
         })
     }
 
@@ -119,7 +113,6 @@ const CameraListView = () => {
 /*
  * Knop om de pagina te herladen.
  */
-
 const RefreshButton = ({refreshFunction}) => {
     return (
         <Button variant="primary" className="w-100" onClick={refreshFunction}>
@@ -131,11 +124,11 @@ const RefreshButton = ({refreshFunction}) => {
 /*
  * Knop om de een camera uit de lijst te verwijderen.
  */
-
 const DeleteButton = ({cameraName, onCompleted}) => {
 
     /*
-     * Functie die met een POST request de data in JSON-formaat naar de server stuurt
+     * Functie die een DELETE request naar de /camera/:naam REST-Endpoint stuurt, waar de :naam parameter
+     * de naam van de huidige camera is
      */
     const send = () => {
         fetch(`/camera/` + cameraName, {
@@ -143,12 +136,14 @@ const DeleteButton = ({cameraName, onCompleted}) => {
         }).then(response => {
             onCompleted();
 
+            // Check de HTTP status code van het antwoord
             switch (response.status) {
                 // Aanmaken successvol
                 case 201:
                     break;
+                // Fout
                 default:
-                    console.log("Delete POST error " + response.status)
+                    console.log("Camera delete fout " + response.status)
                     break;
             }
         })
@@ -162,9 +157,8 @@ const DeleteButton = ({cameraName, onCompleted}) => {
 }
 
 /*
- * Knop welke redirect naar de "/camera/new" waarin een nieuwe camera toegevoegd kan worden.
+ * Knop welke redirect naar de "/camera/new" pagina (zie de react-router in App.js) waarin een nieuwe camera toegevoegd kan worden.
  */
-
 const CameraAddButton = () => {
     return (
         <Link to="/camera/new">
@@ -179,9 +173,8 @@ const CameraAddButton = () => {
  * Maakt de tabel aan waarin de naam, het IP van de camera, het IP van de vps, de status van de camera en de verwijderknop
  * worden getoond.
  */
-
-
 const CameraTable = ({cameras, history, reloadFunction}) => {
+    // Als er geen cameras zijn gevonden
     if (cameras.length <= 0) {
         return(
             <tr>
@@ -210,10 +203,10 @@ const CameraTable = ({cameras, history, reloadFunction}) => {
 /*
  * Live tonen van de status van de camera. Deze is "verbonden" of "offine".
  */
-
 const CameraStateBadge = ({camera}) => {
+    // Check of de camera online is
     switch (camera.is_online) {
-        case true:
+        case /*online*/ true:
             return (
                 <Badge variant="success">
                     <Wifi/>
@@ -221,7 +214,7 @@ const CameraStateBadge = ({camera}) => {
                     Verbonden
                 </Badge>
             )
-        default:
+        default: /*offline*/
             return (
                 <Badge variant="danger">
                     <WifiOff/>

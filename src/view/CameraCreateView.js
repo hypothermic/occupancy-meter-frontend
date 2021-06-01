@@ -3,10 +3,24 @@ import {Alert, Button, Col, FormControl, InputGroup, Row, Spinner, Table} from "
 import {CameraVideo, HddNetwork, JustifyLeft} from "react-bootstrap-icons";
 import {Redirect} from "react-router-dom";
 
+/*
+ * Een component waarin de gebruiker een nieuwe camera kan toevoegen
+ */
 const CameraCreateView = () => {
 
+    /*
+     * Naam van de camera (staat gelinked met het "Camera Naam" input veld
+     */
     const [name,  setName]  = useState("")
+
+    /*
+     * IP van de VPS (staat gelinked met het "VPS IP" input veld
+     */
     const [vpsIp, setVpsIp] = useState("")
+
+    /*
+     * IP van de camera (staat gelinked met het "Camera IP" input veld
+     */
     const [camIp, setCamIp] = useState("")
 
     /*
@@ -30,10 +44,13 @@ const CameraCreateView = () => {
     const send = () => {
         setIsSending(true);
 
+        // Stuur een HTTP POST met de data naar /camera/new
         fetch(`/camera/new`, {
             method: 'POST',
             headers: {
+                // Accepteer een antwoord in JSON formaat
                 'Accept': 'application/json',
+                // Geef aan dat wij data in JSON formaat sturen
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(
@@ -43,9 +60,11 @@ const CameraCreateView = () => {
                     "cam_ip": camIp,
                 }
             ),
+        // Zodra we een antwoord krijgen:
         }).then(response => {
             setIsSending(false);
 
+            // Check de HTTP status code van het antwoord
             switch (response.status) {
                 // Aanmaken successvol
                 case 201:
@@ -55,6 +74,7 @@ const CameraCreateView = () => {
                 case 409:
                     setError("Er bestaat al een camera met de naam" + name);
                     break;
+                // Andere fout
                 default:
                     setError("Server error, kijk in de debugging tab van je browser welke error het is");
                     break;

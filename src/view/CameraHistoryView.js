@@ -2,17 +2,21 @@ import React, {useState, useEffect} from 'react'
 import {Badge, Button, Col, Dropdown, Pagination, Row, Spinner, Table} from "react-bootstrap";
 import {useHistory} from 'react-router-dom';
 import {Wifi, WifiOff} from "react-bootstrap-icons";
-import {LineChart, CartesianGrid, Line, Tooltip, XAxis, YAxis, ResponsiveContainer} from "recharts";
+import {LineChart, CartesianGrid, Line, XAxis, YAxis, ResponsiveContainer} from "recharts";
 
+/*
+ * Camera historie overzicht component
+ * "match" is een parameter die door react-router wordt meegegeven
+ */
 const CameraHistoryView = ({match}) => {
 
     /*
-     * Array met alle history pointss
+     * Array met alle history points
      */
     const [points, setPoints] = useState([])
 
     /*
-     * Status van de camera
+     * Status van de camera (online, offline)
      */
     const [status, setStatus] = useState(null)
 
@@ -21,54 +25,71 @@ const CameraHistoryView = ({match}) => {
      */
     const [isLoading, setIsLoading] = useState(false)
 
+    /*
+     * Pagination: hoeveel punten per pagina
+     */
     const [pointAmount, setPointAmount] = useState(10)
+
+    /*
+     * Pagination: huidige pagina
+     */
     const [currentPage, setCurrentPage] = useState(0)
 
+    /*
+     * React-router history
+     */
     const history = useHistory()
 
     /*
      * Functie die bij het laden van de pagina aangeroepen wordt.
      * Hij haalt de JSON data met de camera en history data van de REST endpoint op.
      */
-    useEffect(() => {
-        load()
-    }, [])
+    useEffect(() => load(), [])
 
-    useEffect(() => {
-        load()
-    }, [pointAmount])
+    /*
+     * Functie die de data opnieuw ophaalt wanneer de pagination page length aangepast is door de gebruiker
+     */
+    useEffect(() => load(), [pointAmount])
 
-    useEffect(() => {
-        load()
-    }, [currentPage])
+    /*
+     * Functie die de data opnieuw ophaalt wanneer de huidige pagina is aangepast door de gebruiker
+     */
+    useEffect(() => load(), [currentPage])
 
+    // Functie die de data ophaalt van de backend REST server
     const load = () => {
         setIsLoading(true);
 
+        // Stuur een HTTP GET request naar de /history/:naam endpoint
+        // Geef de parameters amount en offset mee voor pagination doelen
         fetch(`/history/` + match.params.id + `?amount=` + pointAmount + `&offset=` + (currentPage * pointAmount), {
             method: 'GET',
             headers: {
+                // zorg er voor dat wij de data in JSON terug krijgen
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             }
         })
+        // Wanneer we de data terug hebben gekregen staat het in JSON formaat.
+        // Unpack de JSON om er een JavaScript object van te maken
         .then(response => response.json())
+        // Zet de status en points
         .then(message => {
             setStatus(message.status)
             setPoints(message.history)
             setIsLoading(false)
         })
         .catch(error => {
-            // TODO laat error message zien ofzo
+            console.log("Fout bij het ophalen van de data")
         })
     }
 
-    const backFunction = () => {
-        history.push("/camera/list");
-    }
+    // Functie die wordt aangeroepen wanneer er op de "terug" knop wordt gedrukt.
+    const backFunction = () => history.push("/camera/list")
 
     /*
-     * Als de REST call nog bezig is, laat een animatie zien
+     * Als de REST call nog bezig is, laat een animatie zien.
+     * In de JSX kunnen helaas geen comments worden gezet... we hebben het wel zo begrijpbaar mogelijk proberen te maken.
      */
     if (isLoading) {
         return (
@@ -180,6 +201,9 @@ const DeleteButton = ({cameraName, onCompleted}) => {
     )
 }
 
+/*
+ * Knop om de data te herladen
+ */
 const RefreshButton = ({refreshFunction}) => {
     return (
         <Button variant="primary" className="w-100" onClick={refreshFunction}>
@@ -188,6 +212,9 @@ const RefreshButton = ({refreshFunction}) => {
     )
 }
 
+/*
+ * Knop om terug te gaan naar de CameraListView
+ */
 const BackButton = ({backFunction}) => {
     return (
         <Button variant="primary" className="w-100" onClick={backFunction}>
@@ -196,8 +223,14 @@ const BackButton = ({backFunction}) => {
     )
 }
 
+/*
+ * Tabel waarin alle history punten staan
+ */
 const HistoryTable = ({points}) => {
 
+    /*
+     * Functie die een timestamp naar een string omzet
+     */
     const timeFormat = (time) => {
         // geadapteerd van https://stackoverflow.com/a/35890537 ... datum toegevoegd en locale naar NL
         const dtFormat = new Intl.DateTimeFormat('nl-NL', {
@@ -208,13 +241,15 @@ const HistoryTable = ({points}) => {
         return dtFormat.format(new Date(time)); // 1e6 voor omzetten van nanoseconden naar milliseconden
     }
 
+    // Als er geen history punten zijn
     if (points.length <= 0) {
-        return(
+        return (
             <tr>
                 <td colSpan={2} className="text-center py-5">Geen historie</td>
             </tr>
         )
     } else {
+        // Zo wel, laat ze zien in rijen
         return (
             points.sort((a, b) => b.time - a.time).map(camera =>
                 <tr>
@@ -226,21 +261,30 @@ const HistoryTable = ({points}) => {
     }
 }
 
+/*
+ * Grafiek om de history te visualiseren
+ * Met behulp van de recharts library
+ */
 const HistoryGraph = ({points}) => {
     return (
         <ResponsiveContainer width="100%" height={400}>
+
             <LineChart data={points} margin={{top: 5, right: 100, bottom: 20, left: 30}}>
                 <Line type="monotone" dataKey="amount" stroke="#8884d8"/>
                 <CartesianGrid stroke="#ccc" strokeDasharray="5 5"/>
                 <XAxis name="Tijd" dataKey="time" type="number" domain={["auto", "auto"]} tick={<HistoryGraphTick/>}/>
                 <YAxis name="Hoeveelheid Mensen" allowDecimals={false}/>
             </LineChart>
+
         </ResponsiveContainer>
     )
 }
 
+/*
+ * Een label onder aan een grafiek punt
+ */
 const HistoryGraphTick = ({x, y, stroke, payload}) => {
-    // geadapteerd van https://stackoverflow.com/a/35890537 ... datum toegevoegd en locale naar NL
+    // geadapteerd van https://stackoverflow.com/a/35890537 ... datum toegevoegd en locale naar NL veranderd
     const dateFormatter = new Intl.DateTimeFormat('nl-NL', {
         dateStyle: 'short',
     });
@@ -259,16 +303,23 @@ const HistoryGraphTick = ({x, y, stroke, payload}) => {
     )
 }
 
+/*
+ * Status indicator van een camera
+ */
 const CameraStateBadge = ({cameraName, status, onStatusChange}) => {
 
+    /*
+     * Of de camera bezig is met verbinden (POST request is nog niet gereturned)
+     */
     const [isConnecting, setIsConnecting] = useState(false);
 
     /*
-     * Functie die een DELETE request stuurt om de camera te verwijderen
+     * Functie die een POST request stuurt om de camera te verbinden/disconnecten
      */
     const send = (action) => {
         setIsConnecting(true);
 
+        // Stuur HTTP POST request naar /camera/:naam/status
         fetch(`/camera/` + cameraName + `/status`, {
             method: 'POST',
             headers: {
@@ -279,23 +330,26 @@ const CameraStateBadge = ({cameraName, status, onStatusChange}) => {
                     "action": action,
                 }
             ),
+        // Wanneer de response is binnen gekomen:
         }).then(response => {
             setIsConnecting(false);
 
+            // Check the HTTP status code van de response
             switch (response.status) {
-                // Aanmaken successvol
+                // Camerastatus veranderen is successvol
                 case 204:
                     onStatusChange();
                     break;
                 default:
-                    console.log("Delete POST error " + response.status)
+                    console.log("Error in status change " + response.status)
                     break;
             }
         })
     }
 
+    // Check of camera online/offline is
     switch (status) {
-        case true:
+        case /* verbonden */ true:
             return (
                 <Badge variant="success" onClick={() => send("disconnect")}>
                     <Wifi/>
@@ -304,6 +358,7 @@ const CameraStateBadge = ({cameraName, status, onStatusChange}) => {
                 </Badge>
             )
         default:
+            // Check of camera aan het verbinden is
             if (isConnecting) {
                 return (
                     <Badge variant="warning">
@@ -312,7 +367,7 @@ const CameraStateBadge = ({cameraName, status, onStatusChange}) => {
                         Verbinden...
                     </Badge>
                 )
-            } else {
+            } else /* offline */ {
                 return (
                     <Badge variant="danger" onClick={() => send("connect")}>
                         <WifiOff/>
@@ -324,6 +379,7 @@ const CameraStateBadge = ({cameraName, status, onStatusChange}) => {
     }
 }
 
+// Functie om alle getallen tussen "start" en "end" te krijgen
 // https://stackoverflow.com/a/65050538/9107324, aangepast om geen negatieve getallen te genereren
 const range = (start, end) => {
     if (start < 0) {

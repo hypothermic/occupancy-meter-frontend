@@ -6,6 +6,11 @@ import CameraListView from "./view/CameraListView";
 import CameraCreateView from "./view/CameraCreateView";
 import CameraHistoryView from "./view/CameraHistoryView";
 
+/*
+ * De root component, die in de HTML body komt te staan.
+ *
+ * Aan de hand van de huidige URL wordt er in de Container een view (Camera{Create,History,List}View) getoond
+ */
 const App = () => {
     return (
         <div>
