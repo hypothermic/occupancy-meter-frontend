@@ -151,6 +151,9 @@ const CameraHistoryView = ({match}) => {
                             <Pagination.Last/>
                         </Pagination>
                     </Col>
+                    <Col xs={{span: 2}}>
+                        <DeleteButton onClick={() => {} }/>
+                    </Col>
                 </Row>
 
                 <Table striped bordered hover className="my-3">
